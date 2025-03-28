@@ -4,6 +4,7 @@ const cors = require('cors');
 const passport = require('passport');
 const session = require('express-session');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const pgSession = require('connect-pg-simple')(session);
 require('dotenv').config();
 
 const app = express();
@@ -11,7 +12,7 @@ const app = express();
 // Configure PostgreSQL connection with Neon
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false } // Required for Neon connections
+    ssl: { rejectUnauthorized: false }
 });
 
 pool.connect()
@@ -40,18 +41,31 @@ app.use(cors({
 
 app.set('trust proxy', 1);
 
-// Session configuration
+// Create session table
+pool.query(`
+    CREATE TABLE IF NOT EXISTS "session" (
+        "sid" varchar NOT NULL COLLATE "default",
+        "sess" json NOT NULL,
+        "expire" timestamp(6) NOT NULL,
+        CONSTRAINT "session_pkey" PRIMARY KEY ("sid")
+    );
+`).catch(err => console.error('Error creating session table:', err));
+
+// Session configuration with PostgreSQL store
 app.use(session({
+    store: new pgSession({
+        pool,
+        tableName: 'session'
+    }),
     secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     proxy: true,
     cookie: {
         secure: true,
         httpOnly: true,
         sameSite: 'none',
-        maxAge: 24 * 60 * 60 * 1000,
-        path: '/'
+        maxAge: 24 * 60 * 60 * 1000
     }
 }));
 
