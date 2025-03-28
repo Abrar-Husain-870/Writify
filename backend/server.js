@@ -51,21 +51,22 @@ pool.query(`
     );
 `).catch(err => console.error('Error creating session table:', err));
 
-// Session configuration with PostgreSQL store
+// Session configuration
 app.use(session({
     store: new pgSession({
         pool,
         tableName: 'session'
     }),
     secret: process.env.SESSION_SECRET || 'your-secret-key',
+    name: 'writify.sid',
     resave: false,
     saveUninitialized: false,
     proxy: true,
     cookie: {
-        secure: true,
+        secure: isProduction,
         httpOnly: true,
-        sameSite: 'none',
-        maxAge: 24 * 60 * 60 * 1000
+        sameSite: isProduction ? 'none' : 'lax',
+        maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
 
@@ -147,10 +148,13 @@ passport.deserializeUser(async (id, done) => {
     try {
         console.log('Deserializing user:', id);
         const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
-        done(null, result.rows[0]);
-    } catch (error) {
-        console.error('Deserialization error:', error);
-        done(error);
+        if (result.rows.length > 0) {
+            done(null, result.rows[0]);
+        } else {
+            done(new Error('User not found'));
+        }
+    } catch (err) {
+        done(err);
     }
 });
 
@@ -189,18 +193,31 @@ app.get('/auth/google/callback',
 
 // Logout route
 app.post('/api/auth/logout', (req, res) => {
-    console.log('Logout request received. Session ID:', req.sessionID);
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({ error: 'Not authenticated' });
+    }
+
+    const sessionID = req.sessionID;
+    console.log('Logout request received. Session ID:', sessionID);
+
     req.logout((err) => {
         if (err) {
             console.error('Logout error:', err);
             return res.status(500).json({ error: 'Server error during logout' });
         }
+
         req.session.destroy((err) => {
             if (err) {
                 console.error('Session destruction error:', err);
                 return res.status(500).json({ error: 'Server error during session cleanup' });
             }
-            res.clearCookie('connect.sid');
+
+            res.clearCookie('writify.sid', {
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: isProduction ? 'none' : 'lax'
+            });
+
             console.log('User logged out successfully');
             res.json({ success: true });
         });
@@ -219,8 +236,13 @@ app.get('/api/auth/status', (req, res) => {
     
     res.json({
         isAuthenticated: req.isAuthenticated(),
-        sessionID: req.sessionID,
-        user: req.user
+        user: req.user ? {
+            id: req.user.id,
+            name: req.user.name,
+            email: req.user.email,
+            role: req.user.role,
+            profile_picture: req.user.profile_picture
+        } : null
     });
 });
 
