@@ -19,7 +19,7 @@ pool.connect()
     .catch(err => console.error('Error connecting to PostgreSQL:', err));
 
 // Improved session configuration for cross-domain authentication
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const BACKEND_URL = 'https://writify-backend-fj0i.onrender.com';
 const FRONTEND_URL = 'https://writify-frontend.vercel.app';
 const isProduction = true; // Since we're using Render and Vercel
 
