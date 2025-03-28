@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import config from '../config';
 
 interface RatingModalProps {
   isOpen: boolean;
@@ -45,7 +46,7 @@ const RatingModal: React.FC<RatingModalProps> = ({
         assignment_request_id: assignmentRequestId
       });
 
-      const response = await fetch('http://localhost:5000/api/ratings', {
+      const response = await fetch(`${config.apiUrl}/api/ratings`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

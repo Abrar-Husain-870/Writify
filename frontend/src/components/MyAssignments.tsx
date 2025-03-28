@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
 import RatingModal from './RatingModal';
+import config from '../config';
 
 interface User {
   id: number;
@@ -47,7 +48,7 @@ const MyAssignments: React.FC = () => {
     const fetchAssignments = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://localhost:5000/api/my-assignments', {
+        const response = await fetch(`${config.apiUrl}/api/my-assignments`, {
           credentials: 'include',
           headers: {
             'Accept': 'application/json'
@@ -80,7 +81,7 @@ const MyAssignments: React.FC = () => {
 
   const handleCompleteAssignment = async (assignmentId: number) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/assignments/${assignmentId}/complete`, {
+      const response = await fetch(`${config.apiUrl}/api/assignments/${assignmentId}/complete`, {
         method: 'PUT',
         credentials: 'include'
       });
@@ -170,7 +171,7 @@ const MyAssignments: React.FC = () => {
   const updateWhatsAppNumber = async () => {
     try {
       setUpdatingWhatsApp(true);
-      const response = await fetch('http://localhost:5000/api/update-whatsapp', {
+      const response = await fetch(`${config.apiUrl}/api/update-whatsapp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

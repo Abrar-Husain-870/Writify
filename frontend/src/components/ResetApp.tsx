@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
+import config from '../config';
 
 const ResetApp: React.FC = () => {
   const navigate = useNavigate();
@@ -13,12 +14,12 @@ const ResetApp: React.FC = () => {
       return;
     }
 
-    try {
-      setIsResetting(true);
-      setMessage(null);
-      setError(null);
+    setIsResetting(true);
+    setMessage(null);
+    setError(null);
 
-      const response = await fetch('http://localhost:5000/api/reset-app', {
+    try {
+      const response = await fetch(`${config.apiUrl}/api/reset-app`, {
         method: 'POST',
         credentials: 'include',
         headers: {

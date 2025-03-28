@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
+import config from '../config';
 
 interface Rating {
   id: number;
@@ -25,9 +26,9 @@ const MyRatings: React.FC = () => {
 
   useEffect(() => {
     const fetchRatings = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const response = await fetch('http://localhost:5000/api/my-ratings', {
+        const response = await fetch(`${config.apiUrl}/api/my-ratings`, {
           credentials: 'include',
           headers: {
             'Accept': 'application/json'

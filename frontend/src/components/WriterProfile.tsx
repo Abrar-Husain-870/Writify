@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from './Header';
+import config from '../config';
 
 interface Writer {
     id: number;
@@ -42,18 +43,21 @@ const WriterProfile: React.FC = () => {
     const [success, setSuccess] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch(`http://localhost:5000/api/writers/${id}`, {
-            credentials: 'include'
-        })
-        .then(res => res.json())
-        .then(data => {
-            setWriter(data);
-            setLoading(false);
-        })
-        .catch(err => {
-            console.error('Error fetching writer:', err);
-            setLoading(false);
-        });
+        const fetchWriterProfile = async () => {
+            setLoading(true);
+            try {
+                const response = await fetch(`${config.apiUrl}/api/writers/${id}`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                setWriter(data);
+                setLoading(false);
+            } catch (err) {
+                console.error('Error fetching writer:', err);
+                setLoading(false);
+            }
+        };
+        fetchWriterProfile();
     }, [id]);
 
     const validateForm = () => {
@@ -109,7 +113,7 @@ const WriterProfile: React.FC = () => {
                 estimated_cost: parseFloat(formData.estimated_cost.toString())
             };
             
-            const response = await fetch('http://localhost:5000/api/assignment-requests', {
+            const response = await fetch(`${config.apiUrl}/api/assignment-requests`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

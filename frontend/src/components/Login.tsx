@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import config from '../config';
 
 interface LoginProps {}
 
@@ -24,7 +25,7 @@ const Login: React.FC<LoginProps> = () => {
         
         try {
             // Redirect to Google OAuth
-            window.location.href = 'http://localhost:5000/auth/google';
+            window.location.href = `${config.apiUrl}/auth/google`;
         } catch (error) {
             console.error('Login error:', error);
             setError('Failed to connect to authentication service');

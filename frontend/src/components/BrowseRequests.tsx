@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
+import config from '../config';
 
 interface Client {
     id: number;
@@ -31,7 +32,8 @@ const BrowseRequests: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/assignment-requests', {
+        // Fetch assignment requests
+        fetch(`${config.apiUrl}/api/assignment-requests`, {
             credentials: 'include'
         })
         .then(res => {
@@ -97,7 +99,7 @@ const BrowseRequests: React.FC = () => {
     const handleAcceptRequest = async (requestId: number) => {
         try {
             setAcceptingId(requestId);
-            const response = await fetch(`http://localhost:5000/api/assignment-requests/${requestId}/accept`, {
+            const response = await fetch(`${config.apiUrl}/api/assignment-requests/${requestId}/accept`, {
                 method: 'POST',
                 credentials: 'include'
             });

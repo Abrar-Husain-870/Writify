@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DarkModeToggle from './DarkModeToggle';
+import config from '../config';
 
 interface HeaderProps {
     title: string;
@@ -13,8 +14,8 @@ const Header: React.FC<HeaderProps> = ({ title, showBackButton = true }) => {
     const handleSignOut = () => {
         // Create a form element
         const form = document.createElement('form');
-        form.method = 'GET';
-        form.action = 'http://localhost:5000/auth/logout';
+        form.method = 'POST';
+        form.action = `${config.apiUrl}/auth/logout`;
         
         // Append the form to the body and submit it
         document.body.appendChild(form);

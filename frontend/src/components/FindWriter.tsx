@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from './Header';
+import config from '../config';
 
 interface Writer {
     id: number;
@@ -41,7 +42,7 @@ const FindWriter: React.FC = () => {
     const [success, setSuccess] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch('http://localhost:5000/api/writers', {
+        fetch(`${config.apiUrl}/api/writers`, {
             credentials: 'include'
         })
         .then(res => res.json())
@@ -134,7 +135,7 @@ const FindWriter: React.FC = () => {
                 estimated_cost: parseFloat(formData.estimated_cost.toString())
             };
             
-            const response = await fetch('http://localhost:5000/api/assignment-requests', {
+            const response = await fetch(`${config.apiUrl}/api/assignment-requests`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

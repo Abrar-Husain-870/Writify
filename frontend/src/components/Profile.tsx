@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from './Header'; // Assuming the Header component is in the same directory
+import Header from './Header'; 
+import config from '../config';
 
 interface User {
     id: number;
@@ -30,8 +31,8 @@ const Profile: React.FC = () => {
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     useEffect(() => {
-        // Fetch user profile
-        fetch('http://localhost:5000/api/profile', {
+        // Fetch user profile data
+        fetch(`${config.apiUrl}/api/profile`, {
             credentials: 'include'
         })
         .then(res => res.json())
@@ -56,7 +57,7 @@ const Profile: React.FC = () => {
                 whatsapp_number: user?.whatsapp_number || ''
             });
             
-            const response = await fetch('http://localhost:5000/api/profile/writer', {
+            const response = await fetch(`${config.apiUrl}/api/profile/writer`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -119,7 +120,7 @@ const Profile: React.FC = () => {
         }
         
         try {
-            const response = await fetch('http://localhost:5000/api/profile/portfolio', {
+            const response = await fetch(`${config.apiUrl}/api/profile/portfolio`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
