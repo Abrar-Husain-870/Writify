@@ -174,91 +174,54 @@ app.get('/auth/google/callback',
                 return res.redirect(`${FRONTEND_URL}/login?error=unauthorized`);
             }
 
-            // Use req.login instead of req.logIn for better compatibility
             req.login(user, (err) => {
                 if (err) {
                     console.error('Login error:', err);
                     return res.redirect(`${FRONTEND_URL}/login?error=server`);
                 }
-                
-                // Add session debugging
                 console.log('User logged in successfully. Session ID:', req.sessionID);
                 console.log('Session data:', req.session);
-                
-                // Set a cookie to help with session tracking
-                res.cookie('writify_session_check', 'true', { 
-                    maxAge: 24 * 60 * 60 * 1000,
-                    httpOnly: false,
-                    secure: isProduction,
-                    sameSite: isProduction ? 'none' : 'lax'
-                });
-                
-                return res.redirect(`${FRONTEND_URL}/dashboard`);
+                res.redirect(`${FRONTEND_URL}/dashboard`);
             });
         })(req, res, next);
     }
 );
 
 // Logout route
-app.get('/auth/logout', (req, res) => {
-    console.log('Logging out user:', req.user?.id);
-    
-    // Simple approach that works with any Passport.js version
-    req.logout(function(err) {
+app.post('/api/auth/logout', (req, res) => {
+    console.log('Logout request received. Session ID:', req.sessionID);
+    req.logout((err) => {
         if (err) {
             console.error('Logout error:', err);
-            return res.status(500).json({ error: 'Failed to logout' });
+            return res.status(500).json({ error: 'Server error during logout' });
         }
-        
-        // Clear the session cookie
-        res.clearCookie('connect.sid');
-        
-        // Redirect to login page
-        res.redirect(`${FRONTEND_URL}/login`);
+        req.session.destroy((err) => {
+            if (err) {
+                console.error('Session destruction error:', err);
+                return res.status(500).json({ error: 'Server error during session cleanup' });
+            }
+            res.clearCookie('connect.sid');
+            console.log('User logged out successfully');
+            res.json({ success: true });
+        });
     });
 });
 
-// Auth status endpoint
+// Auth status route
 app.get('/api/auth/status', (req, res) => {
     console.log('Auth status check for user:', req.user?.id);
     console.log('Session ID:', req.sessionID);
     console.log('Is authenticated:', req.isAuthenticated());
     
     if (req.isAuthenticated()) {
-        return res.json({ 
-            isAuthenticated: true, 
-            user: {
-                id: req.user.id,
-                name: req.user.name,
-                email: req.user.email,
-                role: req.user.role,
-                profile_picture: req.user.profile_picture
-            },
-            sessionID: req.sessionID
-        });
+        console.log('Authentication check: true', req.user);
     }
     
-    res.json({ 
-        isAuthenticated: false,
-        sessionID: req.sessionID
-    });
-});
-
-// Auth status endpoint
-app.get('/auth/status', (req, res) => {
-    console.log('Auth status check:', { 
+    res.json({
         isAuthenticated: req.isAuthenticated(),
-        user: req.user 
+        sessionID: req.sessionID,
+        user: req.user
     });
-    
-    if (req.isAuthenticated()) {
-        res.json({ 
-            isAuthenticated: true, 
-            user: req.user 
-        });
-    } else {
-        res.json({ isAuthenticated: false });
-    }
 });
 
 // Middleware to check if user is authenticated
