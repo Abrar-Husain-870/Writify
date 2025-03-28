@@ -27,12 +27,19 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Improved session configuration for cross-domain authentication
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const isProduction = BACKEND_URL.startsWith('https');
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // set to true in production with HTTPS
+        secure: isProduction, // Only use secure cookies in production
+        httpOnly: true,
+        sameSite: isProduction ? 'none' : 'lax', // 'none' is required for cross-site cookies in production
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
@@ -42,7 +49,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Add this before your passport strategy
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
 const GOOGLE_CALLBACK_URL = `${BACKEND_URL}/auth/google/callback`;
 
 // Function to validate university email
@@ -138,11 +144,25 @@ app.get('/auth/google/callback',
                 return res.redirect(`${FRONTEND_URL}/login?error=unauthorized`);
             }
 
-            req.logIn(user, (err) => {
+            // Use req.login instead of req.logIn for better compatibility
+            req.login(user, (err) => {
                 if (err) {
                     console.error('Login error:', err);
                     return res.redirect(`${FRONTEND_URL}/login?error=server`);
                 }
+                
+                // Add session debugging
+                console.log('User logged in successfully. Session ID:', req.sessionID);
+                console.log('Session data:', req.session);
+                
+                // Set a cookie to help with session tracking
+                res.cookie('writify_session_check', 'true', { 
+                    maxAge: 24 * 60 * 60 * 1000,
+                    httpOnly: false,
+                    secure: isProduction,
+                    sameSite: isProduction ? 'none' : 'lax'
+                });
+                
                 return res.redirect(`${FRONTEND_URL}/dashboard`);
             });
         })(req, res, next);
@@ -165,6 +185,32 @@ app.get('/auth/logout', (req, res) => {
         
         // Redirect to login page
         res.redirect(`${FRONTEND_URL}/login`);
+    });
+});
+
+// Auth status endpoint
+app.get('/api/auth/status', (req, res) => {
+    console.log('Auth status check for user:', req.user?.id);
+    console.log('Session ID:', req.sessionID);
+    console.log('Is authenticated:', req.isAuthenticated());
+    
+    if (req.isAuthenticated()) {
+        return res.json({ 
+            isAuthenticated: true, 
+            user: {
+                id: req.user.id,
+                name: req.user.name,
+                email: req.user.email,
+                role: req.user.role,
+                profile_picture: req.user.profile_picture
+            },
+            sessionID: req.sessionID
+        });
+    }
+    
+    res.json({ 
+        isAuthenticated: false,
+        sessionID: req.sessionID
     });
 });
 

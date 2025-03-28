@@ -10,6 +10,7 @@ import Profile from './components/Profile';
 import MyAssignments from './components/MyAssignments';
 import MyRatings from './components/MyRatings';
 import { ThemeProvider } from './contexts/ThemeContext';
+import config from './config';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -19,12 +20,23 @@ function App() {
     // Check authentication status when the app loads
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch('http://localhost:5000/auth/status', {
+        console.log('Checking authentication status with API URL:', config.apiUrl);
+        const response = await fetch(`${config.apiUrl}/api/auth/status`, {
           method: 'GET',
           credentials: 'include',
+          headers: {
+            'Accept': 'application/json'
+          }
         });
         
+        if (!response.ok) {
+          console.error('Auth check failed with status:', response.status);
+          setIsAuthenticated(false);
+          return;
+        }
+        
         const data = await response.json();
+        console.log('Auth status response:', data);
         setIsAuthenticated(data.isAuthenticated);
       } catch (error) {
         console.error('Auth check failed:', error);
