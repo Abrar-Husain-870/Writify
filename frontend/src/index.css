@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Add dark mode form input styling globally */
+.dark input,
+.dark select,
+.dark textarea {
+  color: white;
+  background-color: #374151; /* dark gray-700 */
+  border-color: #4B5563; /* dark gray-600 */
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #9CA3AF; /* dark gray-400 */
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  border-color: #3B82F6; /* blue-500 */
+  ring-color: #3B82F6; /* blue-500 */
+}
