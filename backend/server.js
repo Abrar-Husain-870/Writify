@@ -33,7 +33,7 @@ app.use(session({
         httpOnly: true,
         sameSite: 'none', // Required for cross-site cookies
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        domain: '.onrender.com' // Allow cookies for the render.com domain
+        domain: 'writify-backend-fj0i.onrender.com' // Specific to your backend domain
     }
 }));
 
@@ -42,7 +42,8 @@ app.use(cors({
     origin: FRONTEND_URL,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['set-cookie']
 }));
 
 app.set('trust proxy', 1); // Required for secure cookies with proxy
