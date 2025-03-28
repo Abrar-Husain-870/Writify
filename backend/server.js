@@ -192,35 +192,34 @@ app.get('/auth/google/callback',
 );
 
 // Logout route
-app.post('/api/auth/logout', (req, res) => {
-    if (!req.isAuthenticated()) {
-        return res.status(401).json({ error: 'Not authenticated' });
-    }
-
-    const sessionID = req.sessionID;
-    console.log('Logout request received. Session ID:', sessionID);
-
+app.get('/auth/logout', (req, res) => {
+    console.log('Logout request received. Session ID:', req.sessionID);
+    
     req.logout((err) => {
         if (err) {
             console.error('Logout error:', err);
-            return res.status(500).json({ error: 'Server error during logout' });
         }
-
-        req.session.destroy((err) => {
-            if (err) {
-                console.error('Session destruction error:', err);
-                return res.status(500).json({ error: 'Server error during session cleanup' });
-            }
-
-            res.clearCookie('writify.sid', {
-                httpOnly: true,
-                secure: isProduction,
-                sameSite: isProduction ? 'none' : 'lax'
+        
+        if (req.session) {
+            req.session.destroy((err) => {
+                if (err) {
+                    console.error('Session destruction error:', err);
+                }
+                
+                // Clear the session cookie
+                res.clearCookie('writify.sid', {
+                    path: '/',
+                    httpOnly: true,
+                    secure: isProduction,
+                    sameSite: isProduction ? 'none' : 'lax'
+                });
+                
+                console.log('User logged out successfully');
+                res.redirect(`${FRONTEND_URL}/login`);
             });
-
-            console.log('User logged out successfully');
-            res.json({ success: true });
-        });
+        } else {
+            res.redirect(`${FRONTEND_URL}/login`);
+        }
     });
 });
 

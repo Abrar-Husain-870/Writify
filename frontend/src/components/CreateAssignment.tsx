@@ -61,7 +61,7 @@ const CreateAssignment: React.FC = () => {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: name === 'budget' ? parseFloat(value) || 0 : value
+            [name]: name === 'budget' ? (value === '' ? 0 : Math.max(0, parseInt(value, 10))) : value
         }));
     };
 
@@ -131,6 +131,9 @@ const CreateAssignment: React.FC = () => {
                         onChange={handleChange}
                         required
                         min="0"
+                        step="1"
+                        pattern="[0-9]*"
+                        inputMode="numeric"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
                 </div>

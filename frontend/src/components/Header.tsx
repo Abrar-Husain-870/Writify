@@ -13,22 +13,20 @@ const Header: React.FC<HeaderProps> = ({ title, showBackButton = true }) => {
 
     const handleLogout = async () => {
         try {
-            const response = await fetch(`${config.apiUrl}/api/auth/logout`, {
-                method: 'POST',
+            const response = await fetch(`${config.apiUrl}/auth/logout`, {
+                method: 'GET',
                 credentials: 'include',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Cache-Control': 'no-cache',
                 }
             });
 
-            if (response.ok) {
-                // Clear any local storage or state if needed
-                navigate('/login');
-            } else {
-                console.error('Logout failed');
-            }
+            // Always navigate to login page, even if the request fails
+            window.location.href = '/login';
         } catch (error) {
             console.error('Logout error:', error);
+            // Still redirect to login on error
+            window.location.href = '/login';
         }
     };
 
