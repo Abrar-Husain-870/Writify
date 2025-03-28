@@ -21,38 +21,45 @@ pool.connect()
 // Improved session configuration for cross-domain authentication
 const BACKEND_URL = 'https://writify-backend-fj0i.onrender.com';
 const FRONTEND_URL = 'https://writify-frontend.vercel.app';
-const isProduction = true; // Since we're using Render and Vercel
+const isProduction = true;
 
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
-    resave: false,
-    saveUninitialized: false,
-    proxy: true, // Required for Render/Vercel deployments
-    cookie: {
-        secure: isProduction,
-        httpOnly: true,
-        sameSite: 'none', // Required for cross-site cookies
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        domain: 'writify-backend-fj0i.onrender.com' // Specific to your backend domain
-    }
-}));
-
-// Middleware setup - Update CORS configuration
+// Middleware setup - Update CORS configuration first
 app.use(cors({
     origin: FRONTEND_URL,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-    exposedHeaders: ['set-cookie']
+    exposedHeaders: ['Set-Cookie']
 }));
 
-app.set('trust proxy', 1); // Required for secure cookies with proxy
+app.set('trust proxy', 1);
+
+// Session configuration
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: true,
+    saveUninitialized: true,
+    proxy: true,
+    cookie: {
+        secure: true,
+        httpOnly: true,
+        sameSite: 'none',
+        maxAge: 24 * 60 * 60 * 1000,
+        path: '/'
+    }
+}));
 
 app.use(express.json());
 
 // Passport initialization
 app.use(passport.initialize());
 app.use(passport.session());
+
+// Add this after passport initialization
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Credentials', 'true');
+    next();
+});
 
 // Add this before your passport strategy
 const GOOGLE_CALLBACK_URL = `${BACKEND_URL}/auth/google/callback`;

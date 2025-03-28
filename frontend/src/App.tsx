@@ -26,9 +26,11 @@ function App() {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
           },
-          mode: 'cors'
+          mode: 'cors',
+          cache: 'no-store'
         });
         
         if (!response.ok) {
