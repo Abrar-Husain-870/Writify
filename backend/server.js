@@ -20,7 +20,7 @@ pool.connect()
 
 // Middleware setup
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
@@ -42,7 +42,8 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // Add this before your passport strategy
-const GOOGLE_CALLBACK_URL = 'http://localhost:5000/auth/google/callback';
+const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
+const GOOGLE_CALLBACK_URL = `${BACKEND_URL}/auth/google/callback`;
 
 // Function to validate university email
 const isValidUniversityEmail = (email) => {
@@ -119,6 +120,9 @@ app.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })
 );
 
+// Add environment variable for frontend URL with fallback
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
+
 app.get('/auth/google/callback',
     (req, res, next) => {
         passport.authenticate('google', (err, user, info) => {
@@ -126,20 +130,20 @@ app.get('/auth/google/callback',
             
             if (err) {
                 console.error('Authentication error:', err);
-                return res.redirect('http://localhost:3000/login?error=server');
+                return res.redirect(`${FRONTEND_URL}/login?error=server`);
             }
             
             if (!user) {
                 console.log('Authentication failed:', info?.message);
-                return res.redirect('http://localhost:3000/login?error=unauthorized');
+                return res.redirect(`${FRONTEND_URL}/login?error=unauthorized`);
             }
 
             req.logIn(user, (err) => {
                 if (err) {
                     console.error('Login error:', err);
-                    return res.redirect('http://localhost:3000/login?error=server');
+                    return res.redirect(`${FRONTEND_URL}/login?error=server`);
                 }
-                return res.redirect('http://localhost:3000/dashboard');
+                return res.redirect(`${FRONTEND_URL}/dashboard`);
             });
         })(req, res, next);
     }
@@ -160,7 +164,7 @@ app.get('/auth/logout', (req, res) => {
         res.clearCookie('connect.sid');
         
         // Redirect to login page
-        res.redirect('http://localhost:3000/login');
+        res.redirect(`${FRONTEND_URL}/login`);
     });
 });
 
