@@ -18,45 +18,36 @@ pool.connect()
     .then(() => console.log('Connected to PostgreSQL on Neon'))
     .catch(err => console.error('Error connecting to PostgreSQL:', err));
 
-// Middleware setup
-app.use(cors({
-    origin: function(origin, callback) {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if(!origin) return callback(null, true);
-        
-        const allowedOrigins = [
-            'https://writify-frontend.vercel.app',
-            'https://writify-frontend.vercel.app/',
-            'http://localhost:3000'
-        ];
-        
-        if(allowedOrigins.indexOf(origin) === -1){
-            return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
-        }
-        return callback(null, true);
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-app.use(express.json());
-
 // Improved session configuration for cross-domain authentication
 const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:5000';
-const isProduction = BACKEND_URL.startsWith('https');
+const FRONTEND_URL = 'https://writify-frontend.vercel.app';
+const isProduction = true; // Since we're using Render and Vercel
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
+    proxy: true, // Required for Render/Vercel deployments
     cookie: {
-        secure: isProduction, // Only use secure cookies in production
+        secure: isProduction,
         httpOnly: true,
-        sameSite: isProduction ? 'none' : 'lax', // 'none' is required for cross-site cookies in production
-        maxAge: 24 * 60 * 60 * 1000 // 24 hours
+        sameSite: 'none', // Required for cross-site cookies
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        domain: '.onrender.com' // Allow cookies for the render.com domain
     }
 }));
+
+// Middleware setup - Update CORS configuration
+app.use(cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+}));
+
+app.set('trust proxy', 1); // Required for secure cookies with proxy
+
+app.use(express.json());
 
 // Passport initialization
 app.use(passport.initialize());
@@ -139,9 +130,6 @@ passport.deserializeUser(async (id, done) => {
 app.get('/auth/google',
     passport.authenticate('google', { scope: ['profile', 'email'] })
 );
-
-// Add environment variable for frontend URL with fallback
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 app.get('/auth/google/callback',
     (req, res, next) => {
